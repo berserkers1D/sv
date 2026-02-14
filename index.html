@@ -32,8 +32,9 @@
 <script src="https://cdn.jsdelivr.net/npm/three@0.128/examples/js/controls/OrbitControls.js"></script>
 
 <script>
+
 //////////////////////////////////
-// 🧠 DETECTAR MÓVIL (IMPORTANTE)
+// 🧠 DETECTAR MÓVIL
 //////////////////////////////////
 
 const isMobile = /Mobi|Android/i.test(navigator.userAgent);
@@ -127,18 +128,24 @@ const heartMaterial = new THREE.PointsMaterial({
 const heart = new THREE.Points(heartGeometry, heartMaterial);
 scene.add(heart);
 
+// Guardamos posiciones originales
+const originalPositions = positions.slice();
+
 //////////////////////////////////
-// 💥 CLICK → TEXTO ROSADO PRO
+// 💥 CLICK / TOUCH → TEXTO
 //////////////////////////////////
 
-window.addEventListener("click", () => {
+function handleInteraction() {
 
     const x = (Math.random() - 0.5) * 200;
     const y = (Math.random() - 0.5) * 150;
     const z = (Math.random() - 0.5) * 100;
 
     createExplosionText("Evalia", x, y, z);
-});
+}
+
+window.addEventListener("click", handleInteraction);
+window.addEventListener("touchstart", handleInteraction);
 
 function createExplosionText(text, x, y, z) {
 
@@ -203,11 +210,34 @@ function createExplosionText(text, x, y, z) {
 }
 
 //////////////////////////////////
-// 🔄 LOOP
+// 🔄 LOOP CON VIDA
 //////////////////////////////////
 
 function animate() {
     requestAnimationFrame(animate);
+
+    // 💓 Latido general
+    const pulse = 1 + Math.sin(Date.now() * 0.003) * 0.05;
+    heart.scale.set(pulse, pulse, pulse);
+
+    // ✨ Partículas aleatorias que aparecen/desaparecen
+    const positionAttr = heartGeometry.attributes.position;
+
+    for (let i = 0; i < particleCount; i++) {
+
+        if (Math.random() < 0.002) {
+
+            const i3 = i * 3;
+            const factor = Math.random() < 0.5 ? 0.2 : 1;
+
+            positionAttr.array[i3]     = originalPositions[i3]     * factor;
+            positionAttr.array[i3 + 1] = originalPositions[i3 + 1] * factor;
+            positionAttr.array[i3 + 2] = originalPositions[i3 + 2] * factor;
+        }
+    }
+
+    positionAttr.needsUpdate = true;
+
     controls.update();
     renderer.render(scene, camera);
 }
@@ -223,6 +253,7 @@ window.addEventListener('resize', () => {
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
 });
+
 </script>
 
 </body>
